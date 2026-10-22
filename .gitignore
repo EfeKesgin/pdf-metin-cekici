@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Uygulamanın ürettiği çıktı dosyaları
+*_metin.txt
+*_metin.docx
+*_metin.rtf
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

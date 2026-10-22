@@ -1,11 +1,27 @@
-import PyPDF2
+from pypdf import PdfReader
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import os
 import threading
 from ttkthemes import ThemedStyle
-# from docx2txt import process as docx_process
+
+
+def rtf_olustur(metin):
+    """Düz metni Türkçe karakterleri koruyan geçerli bir RTF belgesine çevirir."""
+    parcalar = []
+    for karakter in metin:
+        if karakter in '\\{}':
+            parcalar.append('\\' + karakter)
+        elif karakter == '\n':
+            parcalar.append('\\par\n')
+        elif ord(karakter) > 127:
+            kod = ord(karakter)
+            # RTF \u parametresi 16 bit işaretli tamsayıdır
+            parcalar.append(f'\\u{kod - 65536 if kod > 32767 else kod}?')
+        else:
+            parcalar.append(karakter)
+    return '{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Calibri;}}\\f0\\fs22\n' + ''.join(parcalar) + '}'
 
 class PDFMetinCekici:
     def __init__(self):
@@ -109,39 +125,53 @@ class PDFMetinCekici:
         
         threading.Thread(target=self._metin_cek_thread, daemon=True).start()
     
+    def _ui(self, islev, *args):
+        # Tkinter yalnızca ana iş parçacığından güncellenebilir
+        self.pencere.after(0, islev, *args)
+
+    def _ilerleme_ayarla(self, deger):
+        self.ilerleme['value'] = deger
+
     def _metin_cek_thread(self):
+        format_secimi = self.format_var.get()
         try:
-            with open(self.secili_dosya, 'rb') as dosya:
-                pdf_okuyucu = PyPDF2.PdfReader(dosya)
-                toplam_sayfa = len(pdf_okuyucu.pages)
-                metin = ""
-                
-                for i, sayfa in enumerate(pdf_okuyucu.pages, 1):
-                    metin += sayfa.extract_text() + "\n"
-                    self.ilerleme['value'] = (i / toplam_sayfa) * 100
-                    self.pencere.update_idletasks()
-                
-                self.sonuc_text.delete(1.0, tk.END)
-                self.sonuc_text.insert(tk.END, metin)
-                
-                kayit_yolu = os.path.splitext(self.secili_dosya)[0] + f"_metin.{self.format_var.get()}"
-                if self.format_var.get() == "txt":
-                    with open(kayit_yolu, 'w', encoding='utf-8') as f:
-                        f.write(metin)
-                elif self.format_var.get() == "docx":
-                    from docx import Document
-                    doc = Document()
-                    doc.add_paragraph(metin)
-                    doc.save(kayit_yolu)
-                elif self.format_var.get() == "rtf":
-                    with open(kayit_yolu, 'w', encoding='utf-8') as f:
-                        f.write(metin)
-                messagebox.showinfo("Başarılı", f"Metin başarıyla çıkarıldı ve kaydedildi:\n{kayit_yolu}")
+            pdf_okuyucu = PdfReader(self.secili_dosya)
+            toplam_sayfa = len(pdf_okuyucu.pages)
+            sayfalar = []
+
+            for i, sayfa in enumerate(pdf_okuyucu.pages, 1):
+                sayfalar.append(sayfa.extract_text() or "")
+                self._ui(self._ilerleme_ayarla, (i / toplam_sayfa) * 100)
+            metin = "\n".join(sayfalar)
+
+            kayit_yolu = os.path.splitext(self.secili_dosya)[0] + f"_metin.{format_secimi}"
+            if format_secimi == "txt":
+                with open(kayit_yolu, 'w', encoding='utf-8') as f:
+                    f.write(metin)
+            elif format_secimi == "docx":
+                from docx import Document
+                doc = Document()
+                for paragraf in metin.split("\n"):
+                    doc.add_paragraph(paragraf)
+                doc.save(kayit_yolu)
+            elif format_secimi == "rtf":
+                with open(kayit_yolu, 'w', encoding='ascii') as f:
+                    f.write(rtf_olustur(metin))
+            self._ui(self._bitti, metin, kayit_yolu, None)
         except Exception as e:
-            messagebox.showerror("Hata", f"Metin çıkarılırken bir hata oluştu:\n{str(e)}")
-        finally:
-            self.metin_cek_buton.config(state='normal')
-            self.ilerleme['value'] = 0
+            self._ui(self._bitti, None, None, e)
+
+    def _bitti(self, metin, kayit_yolu, hata):
+        self.metin_cek_buton.config(state='normal')
+        self.ilerleme['value'] = 0
+        if hata:
+            messagebox.showerror("Hata", f"Metin çıkarılırken bir hata oluştu:\n{hata}")
+            return
+        self.sonuc_text.delete(1.0, tk.END)
+        self.sonuc_text.insert(tk.END, metin)
+        if not metin.strip():
+            messagebox.showwarning("Uyarı", "PDF'de seçilebilir metin bulunamadı (taranmış bir belge olabilir).")
+        messagebox.showinfo("Başarılı", f"Metin başarıyla çıkarıldı ve kaydedildi:\n{kayit_yolu}")
     
     def baslat(self):
         self.pencere.mainloop()

@@ -1,5 +1,9 @@
 # PDF Metin Çekici
 
+![Python](https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+[![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-blue.svg)](LICENSE)
+
 PDF dosyalarından metin çıkarmak için geliştirilmiş, modern ve kullanıcı dostu bir masaüstü uygulaması.
 
 ## 🚀 Özellikler
@@ -7,15 +11,16 @@ PDF dosyalarından metin çıkarmak için geliştirilmiş, modern ve kullanıcı
 - 📄 PDF dosyası seçme veya sürükle-bırak ile yükleme
 - 🔍 PDF'den metin çıkarma
 - 👀 Çıkarılan metni anlık görüntüleme
-- 💾 Metni TXT, DOCX veya RTF formatında kaydetme
+- 💾 Metni TXT, DOCX veya RTF formatında kaydetme (Türkçe karakterler korunur)
 - 🎯 Modern ve kullanıcı dostu arayüz
 - ⚡ Hızlı ve verimli çalışma
 - 📊 İlerleme çubuğu ile işlem durumu takibi
+- 🧵 Büyük PDF’lerde arayüz donmaz (işlem arka planda yapılır)
 
 ## 🛠️ Teknolojiler
 
-- Python 3.x
-- PyPDF2
+- Python 3.9+
+- pypdf
 - python-docx
 - tkinterdnd2
 - ttkthemes (modern tema)
@@ -48,7 +53,9 @@ python pdf_metin_cekici.pyw
 
 1. "PDF Dosyasını Buraya Sürükleyin" alanına PDF dosyasını bırakın veya "PDF Dosyası Seç" butonunu kullanın
 2. "Metni Çıkar" butonuna tıklayın
-3. Çıkarılan metin ekranda görüntülenecek ve seçtiğiniz formatta kaydedilecektir
+3. Çıkarılan metin ekranda görüntülenir ve PDF ile aynı klasöre `<dosya-adı>_metin.<format>` adıyla kaydedilir
+
+> **Not:** Taranmış (resim tabanlı) PDF’lerde seçilebilir metin olmadığı için çıktı boş olabilir; bu durumda OCR gerekir.
 
 ## 🤝 Katkıda Bulunma
 
@@ -66,4 +73,4 @@ Bu proje MIT lisansı altında lisanslanmıştır. Daha fazla bilgi için `LICEN
 
 Efe Kesgin - [@EfeKesgin](https://github.com/EfeKesgin)
 
-Proje Linki: [https://github.com/EfeKesgin/pdf-metin-cekici](https://github.com/EfeKesgin/pdf-metin-cekici) 
+Proje Linki: [https://github.com/EfeKesgin/pdf-metin-cekici](https://github.com/EfeKesgin/pdf-metin-cekici)
